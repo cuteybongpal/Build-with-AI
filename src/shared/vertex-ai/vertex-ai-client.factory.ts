@@ -8,6 +8,13 @@ let vertexAiClient: GoogleGenAI | null = null;
 export const createVertexAiClient = () => {
   const config = getVertexAiConfig();
 
+  if (config.authMode === "api-key") {
+    return new GoogleGenAI({
+      vertexai: true,
+      apiKey: config.apiKey,
+    });
+  }
+
   return new GoogleGenAI({
     vertexai: true,
     project: config.project,

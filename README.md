@@ -25,9 +25,19 @@ npm run test
 
 ## Vertex AI
 
-Next.js 서버 사이드에서 Vertex AI를 호출하도록 기본 연결 파일을 구성했습니다.
+Next.js 서버 사이드에서 Vertex AI를 호출하도록 기본 연결 파일을 구성했습니다. 두 가지 인증 모드를 지원합니다.
 
-필요한 환경변수는 `.env.example`을 기준으로 설정합니다.
+### 모드 A — Vertex AI Express Mode (API 키)
+
+```bash
+GOOGLE_API_KEY=AQ.xxxxxxxx
+VERTEX_AI_MODEL=gemini-2.5-flash
+```
+
+`GOOGLE_API_KEY`가 설정되어 있으면 자동으로 Express Mode가 선택됩니다.
+가장 간단하게 시작할 수 있는 방식입니다.
+
+### 모드 B — Application Default Credentials (project + location)
 
 ```bash
 GOOGLE_CLOUD_PROJECT=
@@ -36,11 +46,16 @@ VERTEX_AI_MODEL=gemini-2.5-flash
 GOOGLE_APPLICATION_CREDENTIALS=
 ```
 
-로컬에서는 Google Application Default Credentials를 사용합니다.
-서비스 계정 키 파일을 쓸 경우 `GOOGLE_APPLICATION_CREDENTIALS`에 경로를 넣습니다.
+`GOOGLE_API_KEY`가 비어 있으면 ADC가 사용됩니다. 로컬에서는 `gcloud auth application-default login`을 사용하거나 `GOOGLE_APPLICATION_CREDENTIALS`에 서비스 계정 키 파일 경로를 지정합니다.
 
-설정 여부 확인 경로:
+### 상태 확인
 
 ```bash
 GET /api/vertex-ai/status
+```
+
+응답 예시:
+
+```json
+{ "isConfigured": true, "authMode": "api-key", "model": "gemini-2.5-flash" }
 ```

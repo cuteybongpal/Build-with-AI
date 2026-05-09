@@ -58,6 +58,50 @@ a {
   text-decoration: none;
 }
 
+.screen-track {
+  scroll-behavior: smooth;
+  scrollbar-width: none;
+  overscroll-behavior-x: contain;
+}
+
+.screen-track::-webkit-scrollbar {
+  display: none;
+}
+
+.showcase-track {
+  gap: clamp(1.25rem, 7vw, 8rem);
+  padding-left: calc(50vw - min(54vw, 340px) / 2);
+  padding-right: calc(50vw - min(68vw, 340px) / 2);
+}
+
+.showcase-panel {
+  flex: 0 0 auto;
+  transition:
+    opacity 420ms ease,
+    transform 420ms ease;
+  transform-origin: center;
+}
+
+.showcase-panel-active {
+  opacity: 1;
+  transform: scale(1);
+  pointer-events: auto;
+}
+
+.showcase-panel-preview {
+  opacity: 0.36;
+  transform: scale(0.82);
+  pointer-events: none;
+}
+
+.refrigerator-panel {
+  width: min(54vw, 340px);
+}
+
+.tools-panel {
+  width: min(68vw, 340px);
+}
+
 .asset-image {
   user-select: none;
   -webkit-user-drag: none;
@@ -80,14 +124,167 @@ a {
   transform: scale(1);
 }
 
-.refrigerator-control:checked + .refrigerator-image-button .refrigerator-image-open {
+.refrigerator-control:checked ~ .showcase-shell .refrigerator-image-open {
   opacity: 1;
   transform: scale(1);
 }
 
-.refrigerator-control:checked + .refrigerator-image-button .refrigerator-image-closed {
+.refrigerator-control:checked ~ .showcase-shell .refrigerator-image-closed {
   opacity: 0;
   transform: scale(0.95);
+}
+
+.tool-item {
+  position: absolute;
+  opacity: 0.68;
+  filter: grayscale(1) saturate(0.1);
+  transform: translate(-50%, -50%) scale(0.92);
+  transition:
+    opacity 420ms ease,
+    filter 420ms ease,
+    transform 420ms ease;
+}
+
+.tool-item-frying-pan {
+  top: 8%;
+  left: 50%;
+  width: 28%;
+  aspect-ratio: 196 / 192;
+}
+
+.tool-item-microwave {
+  top: 28%;
+  left: 86%;
+  width: 32%;
+  aspect-ratio: 230 / 165;
+}
+
+.tool-item-pot {
+  top: 72%;
+  left: 84%;
+  width: 32%;
+  aspect-ratio: 232 / 189;
+}
+
+.tool-item-rice-cooker {
+  top: 92%;
+  left: 50%;
+  width: 29%;
+  aspect-ratio: 202 / 183;
+}
+
+.tool-item-blender {
+  top: 72%;
+  left: 16%;
+  width: 25%;
+  aspect-ratio: 164 / 216;
+}
+
+.tool-item-knife {
+  top: 28%;
+  left: 14%;
+  width: 34%;
+  aspect-ratio: 238 / 156;
+}
+
+.tool-item-selected {
+  opacity: 1;
+  filter: grayscale(0) saturate(1);
+  transform: translate(-50%, -50%) scale(1.06);
+}
+
+.tool-add-button-active {
+  scale: 1.03;
+}
+
+.tool-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 50;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(40, 33, 24, 0.22);
+  backdrop-filter: blur(6px);
+}
+
+.tool-modal {
+  position: relative;
+  width: min(86vw, 420px);
+  border: 1px solid rgba(116, 87, 52, 0.22);
+  border-radius: 8px;
+  background: rgba(255, 252, 244, 0.96);
+  box-shadow: 0 18px 42px rgba(94, 68, 37, 0.16);
+  padding: 2.75rem 1.25rem 1.25rem;
+}
+
+.tool-modal-close {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  width: 2rem;
+  height: 2rem;
+  border: 0;
+  border-radius: 999px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.tool-modal-close::before,
+.tool-modal-close::after {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1.05rem;
+  height: 2px;
+  border-radius: 999px;
+  background: #6d5035;
+  content: "";
+}
+
+.tool-modal-close::before {
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.tool-modal-close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.tool-modal-list {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+}
+
+.tool-modal-item {
+  position: relative;
+  aspect-ratio: 1;
+  border: 1px solid rgba(148, 117, 76, 0.2);
+  border-radius: 8px;
+  background: rgba(255, 248, 235, 0.54);
+  cursor: pointer;
+  filter: grayscale(1) saturate(0.1);
+  opacity: 0.56;
+  transform: scale(0.96);
+  transition:
+    border-color 240ms ease,
+    background 240ms ease,
+    filter 240ms ease,
+    opacity 240ms ease,
+    transform 240ms ease;
+}
+
+.tool-modal-item:hover {
+  opacity: 0.8;
+  transform: scale(1);
+}
+
+.tool-modal-item-selected {
+  border-color: rgba(197, 133, 45, 0.72);
+  background: rgba(255, 238, 203, 0.76);
+  filter: grayscale(0) saturate(1);
+  opacity: 1;
+  transform: scale(1.04);
 }
 
 /* =============================================
