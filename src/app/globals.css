@@ -1,0 +1,85 @@
+@import "tailwindcss";
+
+:root {
+  --background: #f7faf5;
+  --foreground: #171c18;
+  --surface: #ffffff;
+  --surface-muted: #edf4ea;
+  --accent: #2f7d4f;
+  --accent-strong: #174d32;
+  --warm: #a85f2a;
+  --line: #d9e4d5;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-surface: var(--surface);
+  --color-surface-muted: var(--surface-muted);
+  --color-accent: var(--accent);
+  --color-accent-strong: var(--accent-strong);
+  --color-warm: var(--warm);
+  --color-line: var(--line);
+  --font-sans: "Geist", "Geist Fallback", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", "Geist Mono Fallback", ui-monospace, monospace;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #101510;
+    --foreground: #f3f7ef;
+    --surface: #171f17;
+    --surface-muted: #20301f;
+    --accent: #8dd59f;
+    --accent-strong: #c6f4cf;
+    --warm: #f0b276;
+    --line: #2e3d2c;
+  }
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  min-height: 100%;
+}
+
+body {
+  margin: 0;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: var(--font-sans);
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+}
+
+.refrigerator-image {
+  transition:
+    opacity 700ms ease,
+    transform 700ms ease;
+}
+
+.refrigerator-image-open {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.refrigerator-image-closed {
+  opacity: 0;
+  transform: scale(1.05);
+}
+
+.refrigerator-control:checked + .refrigerator-image-button .refrigerator-image-open {
+  opacity: 0;
+  transform: scale(0.95);
+}
+
+.refrigerator-control:checked + .refrigerator-image-button .refrigerator-image-closed {
+  opacity: 1;
+  transform: scale(1);
+}
