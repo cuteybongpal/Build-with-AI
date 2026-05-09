@@ -58,6 +58,12 @@ a {
   text-decoration: none;
 }
 
+.asset-image {
+  user-select: none;
+  -webkit-user-drag: none;
+  -webkit-touch-callout: none;
+}
+
 .refrigerator-image {
   transition:
     opacity 700ms ease,
@@ -65,21 +71,21 @@ a {
 }
 
 .refrigerator-image-open {
-  opacity: 1;
-  transform: scale(1);
-}
-
-.refrigerator-image-closed {
   opacity: 0;
   transform: scale(1.05);
 }
 
+.refrigerator-image-closed {
+  opacity: 1;
+  transform: scale(1);
+}
+
 .refrigerator-control:checked + .refrigerator-image-button .refrigerator-image-open {
-  opacity: 0;
-  transform: scale(0.95);
+  opacity: 1;
+  transform: scale(1);
 }
 
 .refrigerator-control:checked + .refrigerator-image-button .refrigerator-image-closed {
-  opacity: 1;
-  transform: scale(1);
+  opacity: 0;
+  transform: scale(0.95);
 }
