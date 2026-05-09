@@ -73,7 +73,8 @@ export default function HomeClient() {
           setSelectedToolNameList(savedToolNameList);
         }
       })
-      .catch(() => {
+      .catch((error) => {
+        console.error("도구 목록 로드 실패:", error);
         if (canUpdate) {
           setSelectedToolNameList([]);
         }
@@ -83,6 +84,14 @@ export default function HomeClient() {
       canUpdate = false;
     };
   }, []);
+
+  const reloadToolNameListFromServer = () => {
+    getUserToolNameList()
+      .then(setSelectedToolNameList)
+      .catch((error) => {
+        console.error("도구 재동기화 실패:", error);
+      });
+  };
 
   const handleShowcaseScroll = () => {
     const showcaseTrack = showcaseTrackRef.current;
@@ -115,16 +124,17 @@ export default function HomeClient() {
   };
 
   const handleToolSelectClick = (toolName: ToolNameType) => {
-    setSelectedToolNameList((currentToolNameList) => {
-      const nextToolNameList = currentToolNameList.includes(toolName)
-        ? currentToolNameList.filter(
-          (currentToolName) => currentToolName !== toolName,
-        )
-        : [...currentToolNameList, toolName];
+    const nextToolNameList = selectedToolNameList.includes(toolName)
+      ? selectedToolNameList.filter(
+        (currentToolName) => currentToolName !== toolName,
+      )
+      : [...selectedToolNameList, toolName];
 
-      void updateUserToolNameList(nextToolNameList);
+    setSelectedToolNameList(nextToolNameList);
 
-      return nextToolNameList;
+    updateUserToolNameList(nextToolNameList).catch((error) => {
+      console.error("도구 저장 실패:", error);
+      reloadToolNameListFromServer();
     });
   };
 

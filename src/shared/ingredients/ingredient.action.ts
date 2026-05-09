@@ -2,12 +2,18 @@
 
 import { auth } from "@/auth";
 import { prismaClient } from "@/shared/database/prisma-client";
-import type { Ingredient } from "@/shared/types/ingredient";
+import { convertIngredientAmount } from "@/shared/ingredients/ingredient-unit.util";
+import {
+  INGREDIENT_UNIT_LIST,
+  type Ingredient,
+  type IngredientUnitType,
+} from "@/shared/types/ingredient";
 
 type AddIngredientInputType = {
   amount: number;
   imageUrl?: string;
   name: string;
+  unit: IngredientUnitType;
 };
 
 const getCurrentUserId = async () => {
@@ -24,9 +30,11 @@ const convertIngredient = (ingredient: {
   amount: number;
   imageUrl: string | null;
   name: string;
+  unit: IngredientUnitType;
 }): Ingredient => ({
   name: ingredient.name,
   amount: ingredient.amount,
+  unit: ingredient.unit,
   imageUrl: ingredient.imageUrl ?? "",
   imageFile: null,
 });
@@ -39,6 +47,7 @@ export const getUserIngredientList = async (): Promise<Ingredient[]> => {
     select: {
       name: true,
       amount: true,
+      unit: true,
       imageUrl: true,
     },
   });
@@ -50,39 +59,64 @@ export const addUserIngredient = async ({
   amount,
   imageUrl,
   name,
+  unit,
 }: AddIngredientInputType): Promise<Ingredient> => {
   const userId = await getCurrentUserId();
   const trimmedName = name.trim();
 
-  if (!trimmedName || amount <= 0) {
+  if (!trimmedName || amount <= 0 || !INGREDIENT_UNIT_LIST.includes(unit)) {
     throw new Error("Invalid ingredient");
   }
 
-  const ingredient = await prismaClient.ingredient.upsert({
+  const existingIngredient = await prismaClient.ingredient.findUnique({
     where: {
       userId_name: {
         userId,
         name: trimmedName,
       },
     },
-    create: {
-      userId,
-      name: trimmedName,
-      amount,
-      imageUrl,
-    },
-    update: {
-      amount: {
-        increment: amount,
-      },
-      ...(imageUrl ? { imageUrl } : {}),
-    },
     select: {
-      name: true,
       amount: true,
-      imageUrl: true,
+      unit: true,
     },
   });
+
+  const ingredient = existingIngredient
+    ? await prismaClient.ingredient.update({
+        where: {
+          userId_name: {
+            userId,
+            name: trimmedName,
+          },
+        },
+        data: {
+          amount:
+            existingIngredient.amount +
+            convertIngredientAmount(amount, unit, existingIngredient.unit),
+          ...(imageUrl ? { imageUrl } : {}),
+        },
+        select: {
+          name: true,
+          amount: true,
+          unit: true,
+          imageUrl: true,
+        },
+      })
+    : await prismaClient.ingredient.create({
+        data: {
+          userId,
+          name: trimmedName,
+          amount,
+          unit,
+          imageUrl,
+        },
+        select: {
+          name: true,
+          amount: true,
+          unit: true,
+          imageUrl: true,
+        },
+      });
 
   return convertIngredient(ingredient);
 };

@@ -6,19 +6,39 @@ import {
   getUserIngredientList,
   removeUserIngredient,
 } from "@/shared/ingredients/ingredient.action";
-import type { Ingredient } from "@/shared/types/ingredient";
+import { convertIngredientAmount } from "@/shared/ingredients/ingredient-unit.util";
+import type { Ingredient, IngredientUnitType } from "@/shared/types/ingredient";
 
-/**
- * 디지털 식재료 저장소 훅
- *
- * - 인메모리 상태로 식재료를 관리합니다 (서버/DB 미사용).
- * - 이름이 같은 식재료가 추가되면 총량만 합산하고 새 항목을 만들지 않습니다.
- * - 사진이 새로 제공되면 기존 사진을 교체합니다.
- */
 export function useIngredientStore() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
-  // Object URL을 추적하여 메모리 누수 방지
   const objectUrlsRef = useRef<Map<string, string>>(new Map());
+
+  const removeObjectUrl = useCallback((name: string) => {
+    const imageUrl = objectUrlsRef.current.get(name);
+
+    if (!imageUrl) {
+      return;
+    }
+
+    URL.revokeObjectURL(imageUrl);
+    objectUrlsRef.current.delete(name);
+  }, []);
+
+  const replaceIngredientListFromServer = useCallback(() => {
+    getUserIngredientList()
+      .then((savedIngredientList) => {
+        setIngredients((currentIngredientList) => {
+          currentIngredientList.forEach((ingredient) => {
+            removeObjectUrl(ingredient.name);
+          });
+
+          return savedIngredientList;
+        });
+      })
+      .catch(() => {
+        setIngredients([]);
+      });
+  }, [removeObjectUrl]);
 
   useEffect(() => {
     let canUpdate = true;
@@ -40,13 +60,13 @@ export function useIngredientStore() {
     };
   }, []);
 
-  /**
-   * 식재료 추가
-   * - 이름이 같은 식재료가 이미 있으면 총량만 합산합니다.
-   * - 새로운 사진이 제공되면 기존 사진을 교체합니다.
-   */
   const addIngredient = useCallback(
-    (name: string, amount: number, imageFile: File | null) => {
+    (
+      name: string,
+      amount: number,
+      unit: IngredientUnitType,
+      imageFile: File | null,
+    ) => {
       const trimmedName = name.trim();
 
       setIngredients((prev) => {
@@ -55,7 +75,6 @@ export function useIngredientStore() {
         );
 
         if (existingIndex !== -1) {
-          // 이름이 같은 식재료가 이미 존재 → 총량 합산
           return prev.map((item, index) => {
             if (index !== existingIndex) return item;
 
@@ -63,11 +82,7 @@ export function useIngredientStore() {
             let newImageFile = item.imageFile;
 
             if (imageFile) {
-              // 기존 Object URL 해제
-              if (item.imageUrl) {
-                URL.revokeObjectURL(item.imageUrl);
-                objectUrlsRef.current.delete(trimmedName);
-              }
+              removeObjectUrl(trimmedName);
               newImageUrl = URL.createObjectURL(imageFile);
               newImageFile = imageFile;
               objectUrlsRef.current.set(trimmedName, newImageUrl);
@@ -75,14 +90,14 @@ export function useIngredientStore() {
 
             return {
               ...item,
-              amount: item.amount + amount,
+              amount:
+                item.amount + convertIngredientAmount(amount, unit, item.unit),
               imageUrl: newImageUrl,
               imageFile: newImageFile,
             };
           });
         }
 
-        // 새로운 식재료 추가
         let imageUrl = "";
         if (imageFile) {
           imageUrl = URL.createObjectURL(imageFile);
@@ -94,67 +109,55 @@ export function useIngredientStore() {
           {
             name: trimmedName,
             amount,
+            unit,
             imageUrl,
             imageFile,
           },
         ];
       });
 
-      void addUserIngredient({
+      addUserIngredient({
         name: trimmedName,
         amount,
-      });
+        unit,
+      })
+        .then((savedIngredient) => {
+          setIngredients((currentIngredientList) =>
+            currentIngredientList.map((ingredient) =>
+              ingredient.name === savedIngredient.name
+                ? {
+                    ...savedIngredient,
+                    imageUrl: ingredient.imageUrl,
+                    imageFile: ingredient.imageFile,
+                  }
+                : ingredient,
+            ),
+          );
+        })
+        .catch(() => {
+          replaceIngredientListFromServer();
+        });
     },
-    [],
+    [removeObjectUrl, replaceIngredientListFromServer],
   );
 
-  /**
-   * 식재료 제거
-   */
-  const removeIngredient = useCallback((name: string) => {
-    setIngredients((prev) => {
-      const target = prev.find((item) => item.name === name);
-      if (target?.imageUrl) {
-        URL.revokeObjectURL(target.imageUrl);
-        objectUrlsRef.current.delete(name);
-      }
-      return prev.filter((item) => item.name !== name);
-    });
+  const removeIngredient = useCallback(
+    (name: string) => {
+      setIngredients((prev) => {
+        removeObjectUrl(name);
+        return prev.filter((item) => item.name !== name);
+      });
 
-    void removeUserIngredient(name);
-  }, []);
-
-  /**
-   * 식재료 총량 수정
-   */
-  const updateAmount = useCallback((name: string, newAmount: number) => {
-    setIngredients((prev) =>
-      prev.map((item) =>
-        item.name === name ? { ...item, amount: newAmount } : item,
-      ),
-    );
-  }, []);
-
-  /**
-   * 모든 식재료 제거
-   */
-  const clearAll = useCallback(() => {
-    setIngredients((prev) => {
-      for (const item of prev) {
-        if (item.imageUrl) {
-          URL.revokeObjectURL(item.imageUrl);
-        }
-      }
-      objectUrlsRef.current.clear();
-      return [];
-    });
-  }, []);
+      removeUserIngredient(name).catch(() => {
+        replaceIngredientListFromServer();
+      });
+    },
+    [removeObjectUrl, replaceIngredientListFromServer],
+  );
 
   return {
     ingredients,
     addIngredient,
     removeIngredient,
-    updateAmount,
-    clearAll,
   };
 }

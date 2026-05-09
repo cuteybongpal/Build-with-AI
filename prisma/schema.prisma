@@ -16,6 +16,13 @@ enum ToolName {
   knife
 }
 
+enum IngredientUnit {
+  mg
+  g
+  kg
+  t
+}
+
 model User {
   id            String       @id @default(cuid())
   name          String?
@@ -66,14 +73,15 @@ model VerificationToken {
 }
 
 model Ingredient {
-  id        String   @id @default(cuid())
+  id        String         @id @default(cuid())
   userId    String
   name      String
-  amount    Int
+  amount    Float
+  unit      IngredientUnit @default(g)
   imageUrl  String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime       @default(now())
+  updatedAt DateTime       @updatedAt
+  user      User           @relation(fields: [userId], references: [id], onDelete: Cascade)
 
   @@unique([userId, name])
   @@index([userId])

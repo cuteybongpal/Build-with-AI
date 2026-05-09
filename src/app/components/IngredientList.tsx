@@ -7,6 +7,12 @@ interface IngredientListProps {
   onRemove: (name: string) => void;
 }
 
+const formatIngredientAmount = (amount: number) => {
+  return amount.toLocaleString("ko-KR", {
+    maximumFractionDigits: 9,
+  });
+};
+
 export default function IngredientList({
   ingredients,
   onRemove,
@@ -38,7 +44,10 @@ export default function IngredientList({
           </div>
           <div className="ingredient-card-info">
             <span className="ingredient-card-name">{item.name}</span>
-            <span className="ingredient-card-amount">{item.amount}g</span>
+            <span className="ingredient-card-amount">
+              {formatIngredientAmount(item.amount)}
+              {item.unit}
+            </span>
           </div>
           <button
             type="button"
