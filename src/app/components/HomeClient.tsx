@@ -1,7 +1,7 @@
 "use client";
 
 import Image from "next/image";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import addIngredientButton from "@/assets/add-ingredient-button.png";
 import appLogo from "@/assets/app-logo.png";
 import blender from "@/assets/blender.png";
@@ -14,6 +14,11 @@ import refrigeratorOpen from "@/assets/refrigerator-open.png";
 import riceCooker from "@/assets/rice-cooker.png";
 import toolAdd from "@/assets/tool-add.png";
 import { useIngredientStore } from "@/shared/hooks/useIngredientStore";
+import {
+  getUserToolNameList,
+  updateUserToolNameList,
+  type ToolNameType,
+} from "@/shared/tools/user-tool.action";
 import AddIngredientModal from "./AddIngredientModal";
 import IngredientList from "./IngredientList";
 
@@ -47,7 +52,6 @@ const toolImageList = [
 ] as const;
 
 type PanelType = "refrigerator" | "tools";
-type ToolNameType = (typeof toolImageList)[number]["name"];
 
 export default function HomeClient() {
   const showcaseTrackRef = useRef<HTMLDivElement>(null);
@@ -59,6 +63,26 @@ export default function HomeClient() {
   const [selectedToolNameList, setSelectedToolNameList] = useState<
     ToolNameType[]
   >([]);
+
+  useEffect(() => {
+    let canUpdate = true;
+
+    getUserToolNameList()
+      .then((savedToolNameList) => {
+        if (canUpdate) {
+          setSelectedToolNameList(savedToolNameList);
+        }
+      })
+      .catch(() => {
+        if (canUpdate) {
+          setSelectedToolNameList([]);
+        }
+      });
+
+    return () => {
+      canUpdate = false;
+    };
+  }, []);
 
   const handleShowcaseScroll = () => {
     const showcaseTrack = showcaseTrackRef.current;
@@ -92,13 +116,15 @@ export default function HomeClient() {
 
   const handleToolSelectClick = (toolName: ToolNameType) => {
     setSelectedToolNameList((currentToolNameList) => {
-      if (currentToolNameList.includes(toolName)) {
-        return currentToolNameList.filter(
+      const nextToolNameList = currentToolNameList.includes(toolName)
+        ? currentToolNameList.filter(
           (currentToolName) => currentToolName !== toolName,
-        );
-      }
+        )
+        : [...currentToolNameList, toolName];
 
-      return [...currentToolNameList, toolName];
+      void updateUserToolNameList(nextToolNameList);
+
+      return nextToolNameList;
     });
   };
 

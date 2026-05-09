@@ -1,6 +1,11 @@
 "use client";
 
-import { useCallback, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
+import {
+  addUserIngredient,
+  getUserIngredientList,
+  removeUserIngredient,
+} from "@/shared/ingredients/ingredient.action";
 import type { Ingredient } from "@/shared/types/ingredient";
 
 /**
@@ -15,6 +20,26 @@ export function useIngredientStore() {
   // Object URL을 추적하여 메모리 누수 방지
   const objectUrlsRef = useRef<Map<string, string>>(new Map());
 
+  useEffect(() => {
+    let canUpdate = true;
+
+    getUserIngredientList()
+      .then((savedIngredientList) => {
+        if (canUpdate) {
+          setIngredients(savedIngredientList);
+        }
+      })
+      .catch(() => {
+        if (canUpdate) {
+          setIngredients([]);
+        }
+      });
+
+    return () => {
+      canUpdate = false;
+    };
+  }, []);
+
   /**
    * 식재료 추가
    * - 이름이 같은 식재료가 이미 있으면 총량만 합산합니다.
@@ -22,8 +47,9 @@ export function useIngredientStore() {
    */
   const addIngredient = useCallback(
     (name: string, amount: number, imageFile: File | null) => {
+      const trimmedName = name.trim();
+
       setIngredients((prev) => {
-        const trimmedName = name.trim();
         const existingIndex = prev.findIndex(
           (item) => item.name === trimmedName,
         );
@@ -73,6 +99,11 @@ export function useIngredientStore() {
           },
         ];
       });
+
+      void addUserIngredient({
+        name: trimmedName,
+        amount,
+      });
     },
     [],
   );
@@ -89,6 +120,8 @@ export function useIngredientStore() {
       }
       return prev.filter((item) => item.name !== name);
     });
+
+    void removeUserIngredient(name);
   }, []);
 
   /**

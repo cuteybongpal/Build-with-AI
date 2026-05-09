@@ -12,6 +12,8 @@
 - Tailwind CSS 4
 - ESLint
 - Google Gen AI SDK for Vertex AI
+- Auth.js / NextAuth Google OAuth
+- Prisma + PostgreSQL
 
 ## Scripts
 
@@ -21,7 +23,32 @@ npm run build
 npm run lint
 npm run typecheck
 npm run test
+npm run db:generate
+npm run db:push
 ```
+
+## Auth and Database
+
+Google 로그인과 사용자별 식재료/도구 저장을 위해 PostgreSQL을 사용합니다.
+
+필수 환경변수:
+
+```bash
+DATABASE_URL=
+AUTH_SECRET=
+AUTH_GOOGLE_ID=
+AUTH_GOOGLE_SECRET=
+```
+
+로컬에서 Prisma Client를 생성하고 스키마를 반영합니다.
+
+```bash
+npm run db:generate
+npm run db:push
+```
+
+`prisma/schema.prisma`에는 Auth.js 기본 테이블과 사용자별 식재료,
+보유 도구 테이블이 포함되어 있습니다.
 
 ## Vertex AI
 
