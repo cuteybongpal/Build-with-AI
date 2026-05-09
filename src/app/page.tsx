@@ -1,6 +1,7 @@
 import { auth, signOut } from "@/auth";
 import { redirect } from "next/navigation";
 import Image from "next/image";
+import Link from "next/link";
 import HomeClient from "./components/HomeClient";
 
 const getInitial = (value: string | null | undefined) => {
@@ -47,6 +48,9 @@ export default async function Home() {
             {displayName}
           </span>
         </div>
+        <Link href="/recipes" className="history-btn">
+          기록
+        </Link>
         <form
           action={async () => {
             "use server";

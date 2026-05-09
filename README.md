@@ -11,7 +11,7 @@
 - TypeScript
 - Tailwind CSS 4
 - ESLint
-- Google Gen AI SDK for Vertex AI
+- OpenAI SDK
 - Auth.js / NextAuth Google OAuth
 - Prisma + PostgreSQL
 
@@ -50,39 +50,35 @@ npm run db:push
 `prisma/schema.prisma`에는 Auth.js 기본 테이블과 사용자별 식재료,
 보유 도구 테이블이 포함되어 있습니다.
 
-## Vertex AI
+## OpenAI
 
-Next.js 서버 사이드에서 Vertex AI를 호출하도록 기본 연결 파일을 구성했습니다. 두 가지 인증 모드를 지원합니다.
+Next.js 서버 사이드에서 OpenAI Chat Completions API를 호출하도록 기본 연결 파일을 구성했습니다.
 
-### 모드 A — Vertex AI Express Mode (API 키)
-
-```bash
-GOOGLE_API_KEY=AQ.xxxxxxxx
-VERTEX_AI_MODEL=gemini-2.5-flash
-```
-
-`GOOGLE_API_KEY`가 설정되어 있으면 자동으로 Express Mode가 선택됩니다.
-가장 간단하게 시작할 수 있는 방식입니다.
-
-### 모드 B — Application Default Credentials (project + location)
+필수 환경변수:
 
 ```bash
-GOOGLE_CLOUD_PROJECT=
-GOOGLE_CLOUD_LOCATION=us-central1
-VERTEX_AI_MODEL=gemini-2.5-flash
-GOOGLE_APPLICATION_CREDENTIALS=
+OPENAI_API_KEY=sk-xxxxxxxx
+OPENAI_MODEL=gpt-5-mini
 ```
 
-`GOOGLE_API_KEY`가 비어 있으면 ADC가 사용됩니다. 로컬에서는 `gcloud auth application-default login`을 사용하거나 `GOOGLE_APPLICATION_CREDENTIALS`에 서비스 계정 키 파일 경로를 지정합니다.
+호환 엔드포인트(Azure OpenAI, OpenRouter, 로컬 LLM 등)를 사용한다면 `OPENAI_BASE_URL`을 추가로 설정하세요.
 
 ### 상태 확인
 
 ```bash
-GET /api/vertex-ai/status
+GET /api/openai/status
 ```
 
 응답 예시:
 
 ```json
-{ "isConfigured": true, "authMode": "api-key", "model": "gemini-2.5-flash" }
+{ "isConfigured": true, "model": "gpt-5-mini", "hasBaseUrl": false }
+```
+
+### 사용 예
+
+```ts
+import { getOpenaiText } from "@/shared/openai/openai-generate.query";
+
+const text = await getOpenaiText({ prompt: "안녕" });
 ```

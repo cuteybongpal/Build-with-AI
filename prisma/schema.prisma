@@ -33,6 +33,7 @@ model User {
   sessions      Session[]
   ingredients   Ingredient[]
   tools         UserTool[]
+  recipes       Recipe[]
   createdAt     DateTime     @default(now())
   updatedAt     DateTime     @updatedAt
 }
@@ -96,4 +97,19 @@ model UserTool {
 
   @@unique([userId, name])
   @@index([userId])
+}
+
+model Recipe {
+  id                 String   @id @default(cuid())
+  userId             String
+  title              String
+  content            String   @db.Text
+  preference         String?
+  servings           Int      @default(1)
+  ingredientSnapshot String   @db.Text
+  toolSnapshot       String   @db.Text
+  createdAt          DateTime @default(now())
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, createdAt])
 }

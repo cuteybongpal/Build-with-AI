@@ -9,6 +9,23 @@ import {
 import { convertIngredientAmount } from "@/shared/ingredients/ingredient-unit.util";
 import type { Ingredient, IngredientUnitType } from "@/shared/types/ingredient";
 
+const createIngredientImageDataUrl = (imageFile: File) => {
+  return new Promise<string>((resolve, reject) => {
+    const reader = new FileReader();
+
+    reader.addEventListener("load", () => {
+      if (typeof reader.result === "string") {
+        resolve(reader.result);
+        return;
+      }
+
+      reject(new Error("Invalid image data"));
+    });
+    reader.addEventListener("error", () => reject(reader.error));
+    reader.readAsDataURL(imageFile);
+  });
+};
+
 export function useIngredientStore() {
   const [ingredients, setIngredients] = useState<Ingredient[]>([]);
   const objectUrlsRef = useRef<Map<string, string>>(new Map());
@@ -116,29 +133,36 @@ export function useIngredientStore() {
         ];
       });
 
-      addUserIngredient({
-        name: trimmedName,
-        amount,
-        unit,
-      })
-        .then((savedIngredient) => {
-          setIngredients((currentIngredientList) =>
-            currentIngredientList.map((ingredient) =>
-              ingredient.name === savedIngredient.name
-                ? {
-                    ...savedIngredient,
-                    imageUrl: ingredient.imageUrl,
-                    imageFile: ingredient.imageFile,
-                  }
-                : ingredient,
-            ),
-          );
-        })
-        .catch(() => {
-          replaceIngredientListFromServer();
+      const saveIngredient = async () => {
+        const imageUrl = imageFile
+          ? await createIngredientImageDataUrl(imageFile)
+          : undefined;
+        const savedIngredient = await addUserIngredient({
+          name: trimmedName,
+          amount,
+          unit,
+          imageUrl,
         });
+
+        setIngredients((currentIngredientList) => {
+          removeObjectUrl(savedIngredient.name);
+
+          return currentIngredientList.map((ingredient) =>
+            ingredient.name === savedIngredient.name
+              ? {
+                  ...savedIngredient,
+                  imageFile: null,
+                }
+              : ingredient,
+          );
+        });
+      };
+
+      saveIngredient().catch((error) => {
+        console.error("식재료 저장 실패:", error);
+      });
     },
-    [removeObjectUrl, replaceIngredientListFromServer],
+    [removeObjectUrl],
   );
 
   const removeIngredient = useCallback(
